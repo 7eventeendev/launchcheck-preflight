@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src data:; object-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>LaunchCheck — free source preflight</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f6f5ee; color: #213c31; font: 16px/1.6 Arial, sans-serif; }
+    main, footer { max-width: 920px; margin: auto; padding: 32px 24px; }
+    h1, h2 { font-family: Georgia, serif; line-height: 1.2; }
+    h1 { font-size: clamp(30px, 5vw, 44px); margin: 8px 0 16px; }
+    h2 { font-size: 28px; }
+    h3 { font-size: 18px; margin: 0 0 8px; }
+    p { margin: 12px 0; }
+    a { color: inherit; }
+    label { display: block; font-weight: bold; margin: 24px 0 8px; }
+    textarea { display: block; width: 100%; min-height: 280px; resize: vertical; padding: 12px; border: 1px solid #526159; background: #fffef9; color: #213c31; font: 14px/1.5 monospace; }
+    button { padding: 11px 16px; border: 1px solid #213c31; background: #213c31; color: #fff; font: inherit; cursor: pointer; }
+    button.secondary { background: #fffef9; color: #213c31; }
+    button:focus-visible, textarea:focus-visible, a:focus-visible, .focus-target:focus { outline: 3px solid #947121; outline-offset: 3px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+    .small { font-size: 14px; }
+    .eyebrow { font-size: 12px; letter-spacing: .08em; }
+    .notice { border-left: 4px solid #526159; padding: 12px 16px; background: #e0e9d7; }
+    .error { border-left: 4px solid #8a3b25; padding: 12px 16px; }
+    .focus-target { scroll-margin-top: 24px; }
+    .results { list-style: none; margin: 20px 0 0; padding: 0; }
+    .finding { padding: 20px 0; border-top: 1px solid #b4c2ae; }
+    .finding p:last-child { margin-bottom: 0; }
+    .result-text, h1, h2, h3, footer { overflow-wrap: anywhere; }
+    footer { border-top: 1px solid #b4c2ae; padding-top: 20px; }
+    [hidden] { display: none; }
+    @media (max-width: 390px) { main, footer { padding-left: 20px; padding-right: 20px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">FREE SOURCE CHECKER / BY 7EVENTEEN</p>
+    <h1>LaunchCheck source preflight</h1>
+    <p>Inspect pasted HTML with 10 source heuristics. This demo works offline: HTML stays in this tab, is never uploaded, and is not rendered as a page. It does not save your source or results.</p>
+    <p class="notice">A pass means this source check found its expected markup. These checks do not test a rendered website, keyboard use, contrast, performance or security. Actual browser testing is still needed; this is not accessibility certification or a launch guarantee.</p>
+
+    <label for="source">HTML source</label>
+    <textarea id="source" spellcheck="false" autocomplete="off" aria-describedby="input-help input-error" placeholder="Paste HTML here. Avoid credentials and private client data."></textarea>
+    <p id="input-help" class="small">Maximum 1,000,000 UTF-8 bytes (1 MB). Example buttons replace the HTML source and run the checks.</p>
+    <p id="input-error" class="error" role="alert" hidden></p>
+    <div class="actions">
+      <button id="check" type="button">Check HTML</button>
+      <button id="example" class="secondary" type="button">Try fictional example</button>
+      <button id="labeled" class="secondary" type="button">Show labeled version</button>
+    </div>
+    <p id="source-context" class="small">The Studio North examples are fictional. The labeled version adds a visible label to the email input.</p>
+
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading" class="focus-target" tabindex="-1">Source observations</h2>
+      <p id="summary" role="status" aria-atomic="true">No checks run yet. Paste HTML or try the fictional example.</p>
+      <ol id="results" class="results"></ol>
+    </section>
+  </main>
+  <footer>
+    <p class="small">AI assistance was used to develop this software. <a href="https://launch.7eventeen.dev">LaunchCheck by 7eventeen (website; internet required)</a>.</p>
+  </footer>
+  <script>
+    'use strict';
+    const MAX_HTML_BYTES = 1000000;
+    const parseMarkup = function parseMarkup(source) {
+  const template = document.createElement('template');
+  // Template descendants remain inert. Preserve root language in a custom tag
+  // because fragment parsing otherwise discards html/head/body wrappers.
+  template.innerHTML = source.replace(/<(\/?)html(?=[\s/>])/gi,'<$1x-launchcheck-html');
+  const root=template.content;
+  return {documentElement:root.querySelector('x-launchcheck-html') || {getAttribute:()=>null},querySelector:root.querySelector.bind(root),querySelectorAll:root.querySelectorAll.bind(root),getElementById:root.getElementById.bind(root)};
+};
+const analyzeDocument = function analyzeDocument(doc) {
+  const findings = [];
+  const add = (name,passed,detail,fix,targets=[]) => findings.push({name,passed,detail,fix,targets});
+  // Ordinals describe the pasted source, without copying values, URLs or HTML.
+  // Keep this inside the function: the offline kit serializes it with toString().
+  const cues = (matches,all,label) => matches.slice(0,3).map(el => `${label} ${all.indexOf(el)+1}: ${el.tagName.toLowerCase()}${el.tagName.toLowerCase()==='input' ? ` (type=${el.type})` : ''}`);
+  const title = doc.querySelector('title')?.textContent?.trim() || '';
+  add('Page title', !!title, title || 'No title element found.', 'Add a specific title describing this page.');
+  const description = doc.querySelector('meta[name="description" i]')?.getAttribute('content')?.trim() || '';
+  add('Search description', !!description, description || 'No non-empty description found.', 'Write a short, accurate meta description.');
+  const lang = doc.documentElement.getAttribute('lang')?.trim() || '';
+  add('Document language', !!lang, lang ? `Language is ${lang}.` : 'No document language.', 'Set the appropriate lang attribute on html.');
+  const viewport = doc.querySelector('meta[name="viewport" i]')?.getAttribute('content') || '';
+  add('Mobile viewport', /width\s*=\s*device-width/i.test(viewport), viewport || 'No viewport metadata.', 'Use width=device-width, initial-scale=1 and allow zoom.');
+  const h1s = [...doc.querySelectorAll('h1')];
+  add('Main heading', h1s.length === 1 && !!h1s[0]?.textContent?.trim(), `${h1s.length} h1 elements found.`, 'Use one clear main heading and review the outline.', cues(h1s,h1s,'Heading'));
+  const images = [...doc.querySelectorAll('img')];
+  const missingAlt = images.filter(img => !img.hasAttribute('alt'));
+  add('Image text alternatives', missingAlt.length === 0, `${missingAlt.length} images without alt. Empty alt is valid for decoration.`, 'Describe meaningful images; use empty alt for decorative images.', cues(missingAlt,images,'Image'));
+  const labels = [...doc.querySelectorAll('label')];
+  const inputs = [...doc.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]),select,textarea')];
+  function referencedName(el) { const ids = (el.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean); return ids.length && ids.every(id => doc.getElementById(id)?.textContent?.trim()); }
+  const htmlNamespace = 'http://www.w3.org/1999/xhtml';
+  const labelableNames = new Set(['button','input','meter','output','progress','select','textarea']);
+  const isLabelable = el => !!el && el.namespaceURI === htmlNamespace && labelableNames.has(el.localName) && !(el.localName === 'input' && el.type === 'hidden');
+  // Explicit labels target the first matching ID, even if that node cannot be labeled.
+  const firstIds = new Map();
+  for (const el of doc.querySelectorAll('[id]')) {
+    const id = el.getAttribute('id');
+    if (id && !firstIds.has(id)) firstIds.set(id,el);
+  }
+  const labeledControls = new Set();
+  for (const label of labels) {
+    if (label.namespaceURI !== htmlNamespace || !label.textContent?.trim()) continue;
+    // Native label.control is unreliable for explicit labels in an inert template.
+    // A present for attribute always wins; empty or invalid values have no fallback.
+    const control = label.hasAttribute('for')
+      ? firstIds.get(label.getAttribute('for'))
+      : [...label.querySelectorAll('button,input,meter,output,progress,select,textarea')].find(isLabelable);
+    if (isLabelable(control)) labeledControls.add(control);
+  }
+  const unlabeled = inputs.filter(input => !input.getAttribute('aria-label')?.trim() && !referencedName(input) && !labeledControls.has(input));
+  add('Form labels', unlabeled.length === 0, `${unlabeled.length} fields without a detectable label.`, 'Give each field its own visible label; use unique IDs for explicit labels. Placeholders are insufficient.', cues(unlabeled,inputs,'Field'));
+  const buttons = [...doc.querySelectorAll('button')];
+  const unnamed = buttons.filter(button => !button.textContent?.trim() && !button.getAttribute('aria-label')?.trim() && !referencedName(button) && ![...button.querySelectorAll('img[alt]')].some(img => img.getAttribute('alt')?.trim()));
+  add('Button names', unnamed.length === 0, `${unnamed.length} buttons without a detectable name.`, 'Add visible text or an accurate accessible label.', cues(unnamed,buttons,'Button'));
+  const canonicalEl = doc.querySelector('link[rel="canonical" i]');
+  const canonical = canonicalEl?.getAttribute('href') || canonicalEl?.getAttribute('data-inert-href') || '';
+  add('Canonical hint', /^https?:\/\//.test(canonical), canonical || 'No absolute canonical found. This may be intentional.', 'If appropriate, specify this page’s preferred absolute URL.');
+  const social = doc.querySelector('meta[property="og:title" i]')?.getAttribute('content')?.trim();
+  add('Social preview title', !!social, social ? `Open Graph title: ${social}` : 'No Open Graph title found.', 'Add accurate sharing metadata when relevant.');
+  return findings;
+};
+const validateHtmlSource = function validateHtmlSource(source) {
+  if (!source.trim()) throw new Error('Add your HTML or try the example.');
+  if (source.includes('\0')) throw new Error('Choose UTF-8 HTML text, rather than a binary file.');
+  if (new TextEncoder().encode(source).byteLength > MAX_HTML_BYTES) {
+    throw new Error('HTML must be no larger than 1,000,000 UTF-8 bytes (1 MB).');
+  }
+  return source;
+};
+    const exampleHtml = "\u003c!doctype html>\n\u003chtml lang=\"en\">\n  \u003chead>\n    \u003cmeta charset=\"utf-8\">\n    \u003ctitle>Studio North — email updates\u003c/title>\n    \u003cmeta name=\"description\" content=\"A fictional email-signup page for the LaunchCheck demonstration.\">\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    \u003clink rel=\"canonical\" href=\"https://example.invalid/email-updates\">\n    \u003cmeta property=\"og:title\" content=\"Studio North — email updates\">\n  \u003c/head>\n  \u003cbody>\n    \u003cmain>\n      \u003cp>Fictional example for a source-only review.\u003c/p>\n      \u003ch1>Get Studio North updates\u003c/h1>\n      \u003cp>Sign up for occasional studio news.\u003c/p>\n      \u003cform>\n        \u003cinput id=\"demo-email\" type=\"email\" placeholder=\"you@example.invalid\" autocomplete=\"email\">\n        \u003cbutton type=\"submit\">Sign up for updates\u003c/button>\n      \u003c/form>\n    \u003c/main>\n  \u003c/body>\n\u003c/html>";
+    const fixedExampleHtml = "\u003c!doctype html>\n\u003chtml lang=\"en\">\n  \u003chead>\n    \u003cmeta charset=\"utf-8\">\n    \u003ctitle>Studio North — email updates\u003c/title>\n    \u003cmeta name=\"description\" content=\"A fictional email-signup page for the LaunchCheck demonstration.\">\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    \u003clink rel=\"canonical\" href=\"https://example.invalid/email-updates\">\n    \u003cmeta property=\"og:title\" content=\"Studio North — email updates\">\n  \u003c/head>\n  \u003cbody>\n    \u003cmain>\n      \u003cp>Fictional example for a source-only review.\u003c/p>\n      \u003ch1>Get Studio North updates\u003c/h1>\n      \u003cp>Sign up for occasional studio news.\u003c/p>\n      \u003cform>\n        \u003clabel for=\"demo-email\">Email address\u003c/label>\n        \u003cinput id=\"demo-email\" type=\"email\" placeholder=\"you@example.invalid\" autocomplete=\"email\">\n        \u003cbutton type=\"submit\">Sign up for updates\u003c/button>\n      \u003c/form>\n    \u003c/main>\n  \u003c/body>\n\u003c/html>";
+    const byId = id => document.getElementById(id);
+    function setText(id, text) { if (byId(id).textContent !== text) byId(id).textContent = text; }
+    function element(tag, text, parent) {
+      const node = document.createElement(tag);
+      node.textContent = text;
+      parent.appendChild(node);
+      return node;
+    }
+    function clearError() {
+      byId('input-error').hidden = true;
+      byId('input-error').textContent = '';
+      byId('source').removeAttribute('aria-invalid');
+    }
+    function checkSource() {
+      clearError();
+      byId('results').replaceChildren();
+      let findings;
+      try { findings = analyzeDocument(parseMarkup(validateHtmlSource(byId('source').value))); }
+      catch (error) {
+        byId('source').setAttribute('aria-invalid', 'true');
+        byId('input-error').textContent = error.message;
+        byId('input-error').hidden = false;
+        setText('summary', 'No results. Check the HTML input.');
+        byId('source').focus();
+        return;
+      }
+      const passed = findings.filter(finding => finding.passed).length;
+      setText('summary', passed + ' of ' + findings.length + ' source checks passed · ' + (findings.length - passed) + ' need review. A pass does not verify the rendered website.');
+      for (const finding of findings) {
+        const row = document.createElement('li');
+        row.className = 'finding result-text';
+        byId('results').appendChild(row);
+        element('h3', (finding.passed ? 'PASS: ' : 'REVIEW: ') + finding.name, row);
+        element('p', finding.detail, row);
+        if (!finding.passed) {
+          if (finding.targets.length) element('p', 'Where to look in your source: ' + finding.targets.join('; '), row);
+          element('p', 'Next step: ' + finding.fix, row);
+        }
+      }
+      byId('results-heading').focus({preventScroll: true});
+      byId('results-heading').scrollIntoView({block: 'start'});
+    }
+    byId('check').onclick = checkSource;
+    byId('example').onclick = () => {
+      byId('source').value = exampleHtml;
+      setText('source-context', 'Fictional Studio North example: the email input has no detectable label. This is demonstration source, not a customer website.');
+      checkSource();
+    };
+    byId('labeled').onclick = () => {
+      byId('source').value = fixedExampleHtml;
+      setText('source-context', 'Fictional Studio North labeled version: a visible Email address label is associated with the email input. Passing all 10 source checks does not establish website accessibility or launch readiness.');
+      checkSource();
+    };
+    byId('source').oninput = () => {
+      clearError();
+      byId('results').replaceChildren();
+      setText('source-context', 'Edited HTML stays in this tab. Check it again to update the source observations.');
+      setText('summary', 'Source changed. Choose Check HTML to run the 10 source checks.');
+    };
+  </script>
+</body>
+</html>
