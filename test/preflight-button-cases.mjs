@@ -1,0 +1,26 @@
+// Expected unnamed counts for the source heuristic, not a complete accessible-name algorithm.
+// Run these markup strings through the actual inert parser and browser DOM.
+export const buttonCases = [
+  {name:'empty button',markup:'<button></button>',unnamed:1},
+  {name:'hidden SVG title',markup:'<button><svg aria-hidden="true"><title>Menu</title><path d="M0 0h10"></path></svg></button>',unnamed:1},
+  {name:'hidden attribute on SVG',markup:'<button><svg hidden><title>Menu</title></svg></button>',unnamed:1},
+  {name:'aria-hidden text',markup:'<button><span aria-hidden="true">Menu</span></button>',unnamed:1},
+  {name:'hidden text',markup:'<button><span hidden>Menu</span></button>',unnamed:1},
+  {name:'nested hidden ancestor cannot be reversed by child',markup:'<button><span aria-hidden="true"><span aria-hidden="false">Menu</span></span></button>',unnamed:1},
+  {name:'hidden image alt',markup:'<button><img hidden alt="Menu"></button>',unnamed:1},
+  {name:'aria-hidden image alt',markup:'<button><img aria-hidden="true" alt="Menu"></button>',unnamed:1},
+  {name:'image alt inside nested hidden ancestor',markup:'<button><span><span hidden><img alt="Menu"></span></span></button>',unnamed:1},
+  {name:'case-insensitive hidden state',markup:'<button><span aria-hidden="TRUE"><img alt="Menu"></span></button>',unnamed:1},
+  {name:'visible descendant text',markup:'<button><span>Open <strong>menu</strong></span></button>',unnamed:0},
+  {name:'visible text survives hidden decoration',markup:'<button><svg aria-hidden="true"><title>Decoration</title></svg>Open menu</button>',unnamed:0},
+  {name:'unhidden SVG title',markup:'<button><svg><title>Menu</title></svg></button>',unnamed:0},
+  {name:'visible image alt',markup:'<button><img alt="Menu"></button>',unnamed:0},
+  {name:'visible image survives hidden sibling',markup:'<button><span hidden><img alt="Decoration"></span><img alt="Menu"></button>',unnamed:0},
+  {name:'direct ARIA label survives hidden content',markup:'<button aria-label="Menu"><svg aria-hidden="true"><title>Decoration</title></svg></button>',unnamed:0},
+  {name:'explicitly referenced hidden external text',markup:'<span id="menu-label" hidden>Menu</span><button aria-labelledby="menu-label"></button>',unnamed:0},
+  {name:'explicitly referenced hidden descendant text',markup:'<button aria-labelledby="menu-label"><span id="menu-label" aria-hidden="true">Menu</span></button>',unnamed:0},
+  {name:'script text is not button content',markup:'<button><script type="application/json">{"label":"Menu"}</script></button>',unnamed:1},
+  {name:'style text is not button content',markup:'<button><style>button { color: red; }</style></button>',unnamed:1},
+  {name:'template content is not button content',markup:'<button><template><span>Menu</span><img alt="Menu"></template></button>',unnamed:1},
+  {name:'mixed buttons retain all unnamed counts',markup:'<button><span hidden>Menu</span></button><button>Continue</button><button><span aria-hidden="true"><img alt="Menu"></span></button>',unnamed:2},
+];

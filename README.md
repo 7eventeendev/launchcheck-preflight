@@ -16,7 +16,7 @@ This fictional Studio North example shows the hosted free checker, with the inpu
 
 ## Try it offline
 
-[Download the offline demo ZIP](https://github.com/7eventeendev/launchcheck-preflight/releases/download/v0.1.2/launchcheck-preflight-v0.1.2.zip), extract it, and open **demo.html** in your browser. The small package contains the free demo, a quickstart and the MIT license. No server or installation is needed; the demo does not save source or results.
+[Download the offline demo ZIP](https://github.com/7eventeendev/launchcheck-preflight/releases/download/v0.1.3/launchcheck-preflight-v0.1.3.zip), extract it, and open **demo.html** in your browser. The small package contains the free demo, a quickstart and the MIT license. No server or installation is needed; the demo does not save source or results.
 
 For the source modules and development files, use **Code → Download ZIP** to download the full repository. The same self-contained **[demo.html](demo.html)** is included there.
 

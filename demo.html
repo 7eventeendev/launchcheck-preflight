@@ -134,8 +134,16 @@ const analyzeDocument = function analyzeDocument(doc) {
   }
   const unlabeled = inputs.filter(input => !input.getAttribute('aria-label')?.trim() && !referencedName(input) && !labeledControls.has(input));
   add('Form labels', unlabeled.length === 0, `${unlabeled.length} fields without a detectable label.`, 'Give each field its own visible label; use unique IDs for explicit labels. Placeholders are insufficient.', cues(unlabeled,inputs,'Field'));
+  function hasButtonContent(button) {
+    // Source-only approximation: no computed CSS or full accessible-name algorithm.
+    // Inspect a detached copy so hidden content and image alternatives cannot leak
+    // into this fallback; explicitly referenced labels still use the original DOM.
+    const content = button.cloneNode(true);
+    for (const excluded of content.querySelectorAll('[hidden],[aria-hidden="true" i],script,style,template')) excluded.remove();
+    return !!content.textContent?.trim() || [...content.querySelectorAll('img[alt]')].some(img => img.getAttribute('alt')?.trim());
+  }
   const buttons = [...doc.querySelectorAll('button')];
-  const unnamed = buttons.filter(button => !button.textContent?.trim() && !button.getAttribute('aria-label')?.trim() && !referencedName(button) && ![...button.querySelectorAll('img[alt]')].some(img => img.getAttribute('alt')?.trim()));
+  const unnamed = buttons.filter(button => !button.getAttribute('aria-label')?.trim() && !referencedName(button) && !hasButtonContent(button));
   add('Button names', unnamed.length === 0, `${unnamed.length} buttons without a detectable name.`, 'Add visible text or an accurate accessible label.', cues(unnamed,buttons,'Button'));
   const canonicalEl = doc.querySelector('link[rel~="canonical" i]');
   const canonical = (canonicalEl?.getAttribute('href') || canonicalEl?.getAttribute('data-inert-href') || '').trim();
