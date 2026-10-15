@@ -10,7 +10,7 @@ The hosted site supports limited anonymous usage counts ([privacy details](https
 
 ## Try it offline
 
-[Download the offline demo ZIP](https://github.com/7eventeendev/launchcheck-preflight/releases/download/v0.1.1/launchcheck-preflight-v0.1.1.zip), extract it, and open **demo.html** in your browser. The small package contains the free demo, a quickstart and the MIT license. No server or installation is needed; the demo does not save source or results.
+[Download the offline demo ZIP](https://github.com/7eventeendev/launchcheck-preflight/releases/download/v0.1.2/launchcheck-preflight-v0.1.2.zip), extract it, and open **demo.html** in your browser. The small package contains the free demo, a quickstart and the MIT license. No server or installation is needed; the demo does not save source or results.
 
 For the source modules and development files, use **Code → Download ZIP** to download the full repository. The same self-contained **[demo.html](demo.html)** is included there.
 
@@ -23,13 +23,15 @@ Choose **Try fictional example** to inspect a Studio North email-signup page: 9 
 | Page title | Non-empty `title` text |
 | Search description | Non-empty description metadata |
 | Document language | Non-empty `html` `lang` attribute |
-| Mobile viewport | Viewport metadata containing `width=device-width` |
+| Mobile viewport | Complete `width=device-width` entries; conflicting widths need review |
 | Main heading | One `h1` with text |
 | Image text alternatives | An `alt` attribute on each image; empty is allowed |
 | Form labels | A detectable HTML or ARIA name on each checked field |
 | Button names | Detectable text, an ARIA name, or image alternative text |
 | Canonical hint | A canonical relation token with a parseable absolute HTTP(S) URL |
 | Social preview title | Non-empty Open Graph title metadata |
+
+Viewport recognition is a source heuristic: it does not compute the effective viewport, resolve multiple viewport meta elements or test mobile layout/zoom.
 
 These are heuristics, not conformance tests. A pass only means the expected source pattern was found. Empty image alt may be inappropriate, a language code may be wrong, a canonical may point to the wrong page, and detected names may still be confusing. The tool does not compute the full accessible-name algorithm or inspect rendered styles, JavaScript-generated content, keyboard use, contrast, performance, links, or security. Actual browser and human testing are still needed. No accessibility certification, ranking, conversion, or launch-readiness guarantee is provided.
 
@@ -62,7 +64,7 @@ npm test
 npm run build
 ```
 
-The tests cover UTF-8 limits, file-input rejection and canonical URL syntax. The build regenerates the committed self-contained `demo.html` from the shared source functions and fictional examples. Browser behavior should also be checked after engine changes.
+The tests cover UTF-8 limits, file-input rejection, canonical URL syntax and complete viewport width entries. The build regenerates the committed self-contained `demo.html` from the shared source functions and fictional examples. Browser behavior should also be checked after engine changes.
 
 ## About
 

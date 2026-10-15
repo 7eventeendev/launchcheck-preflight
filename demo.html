@@ -86,7 +86,25 @@ const analyzeDocument = function analyzeDocument(doc) {
   const lang = doc.documentElement.getAttribute('lang')?.trim() || '';
   add('Document language', !!lang, lang ? `Language is ${lang}.` : 'No document language.', 'Set the appropriate lang attribute on html.');
   const viewport = doc.querySelector('meta[name="viewport" i]')?.getAttribute('content') || '';
-  add('Mobile viewport', /width\s*=\s*device-width/i.test(viewport), viewport || 'No viewport metadata.', 'Use width=device-width, initial-scale=1 and allow zoom.');
+  // Recognize whole source entries, not substrings of another key or value.
+  // Keep parsing here so the offline builds serialize the same heuristic.
+  const viewportWidths = [];
+  let position = 0;
+  while (position < viewport.length) {
+    while (position < viewport.length && /[\t\n\r ,;=]/.test(viewport[position])) position++;
+    const nameStart = position;
+    while (position < viewport.length && !/[\t\n\r ,;=]/.test(viewport[position])) position++;
+    const name = viewport.slice(nameStart,position).toLowerCase();
+    while (position < viewport.length && !/[,;=]/.test(viewport[position])) position++;
+    if (position >= viewport.length || viewport[position] !== '=') continue;
+    while (position < viewport.length && /[\t\n\r =]/.test(viewport[position])) position++;
+    const valueStart = position;
+    while (position < viewport.length && !/[\t\n\r ,;=]/.test(viewport[position])) position++;
+    const value = viewport.slice(valueStart,position).toLowerCase();
+    if (name === 'width' && value) viewportWidths.push(value);
+  }
+  const deviceWidth = viewportWidths.length > 0 && viewportWidths.every(value=>value === 'device-width');
+  add('Mobile viewport', deviceWidth, viewport || 'No viewport metadata.', 'Use a complete width=device-width entry; review conflicting width entries, mobile layout and zoom separately.');
   const h1s = [...doc.querySelectorAll('h1')];
   add('Main heading', h1s.length === 1 && !!h1s[0]?.textContent?.trim(), `${h1s.length} h1 elements found.`, 'Use one clear main heading and review the outline.', cues(h1s,h1s,'Heading'));
   const images = [...doc.querySelectorAll('img')];
