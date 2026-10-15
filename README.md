@@ -1,6 +1,12 @@
 # LaunchCheck source preflight
 
-Ten HTML source heuristics, run locally in your browser. Paste a page's HTML and get observations, source-location cues, and suggested next steps. No account, API, dependencies, source upload, or telemetry.
+Ten HTML source heuristics, run locally in your browser. Paste a page's HTML and get observations, source-location cues, and suggested next steps. The offline demo needs no account, API or dependencies, and sends no source or telemetry.
+
+## Try it in your browser
+
+[Open the free hosted checker](https://launch.7eventeen.dev/#preflight). No download or purchase is required; it runs the same ten source heuristics on your device.
+
+The hosted site supports limited anonymous usage counts ([privacy details](https://launch.7eventeen.dev/privacy#usage)). You can also [open it with usage counts off](https://launch.7eventeen.dev/?measure=off#preflight).
 
 ## Try it offline
 
@@ -60,4 +66,4 @@ The tests cover UTF-8 limits and file-input rejection. The build regenerates the
 
 Maintained by **Ski / 7eventeen**. AI assistance was used to develop this software. This repository's source and demo are available under the [MIT license](LICENSE).
 
-[LaunchCheck by 7eventeen](https://launch.7eventeen.dev/) includes a permanently free hosted checker and an optional **US$39 one-time offline toolkit** with 45 guided manual checks, evidence notes, priorities, studio-branded printable reports, and JSON/CSV export. You perform the review yourself. The paid toolkit has separate terms and is not included in this repository; this repository's MIT license applies to these published files.
+[LaunchCheck by 7eventeen](https://launch.7eventeen.dev/) includes a free hosted checker and an optional **US$39 one-time offline toolkit** with 45 guided manual checks, evidence notes, priorities, studio-branded printable reports, and JSON/CSV export. You perform the review yourself. The paid toolkit has separate terms and is not included in this repository; this repository's MIT license applies to these published files.
