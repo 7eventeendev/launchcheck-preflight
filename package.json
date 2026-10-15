@@ -1,6 +1,6 @@
 {
   "name": "launchcheck-preflight",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Ten local HTML source heuristics with a self-contained offline browser demo.",
   "type": "module",
@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "node scripts/build-demo.mjs",
-    "test": "node --test test/html-input.test.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=22"

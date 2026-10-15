@@ -119,9 +119,16 @@ const analyzeDocument = function analyzeDocument(doc) {
   const buttons = [...doc.querySelectorAll('button')];
   const unnamed = buttons.filter(button => !button.textContent?.trim() && !button.getAttribute('aria-label')?.trim() && !referencedName(button) && ![...button.querySelectorAll('img[alt]')].some(img => img.getAttribute('alt')?.trim()));
   add('Button names', unnamed.length === 0, `${unnamed.length} buttons without a detectable name.`, 'Add visible text or an accurate accessible label.', cues(unnamed,buttons,'Button'));
-  const canonicalEl = doc.querySelector('link[rel="canonical" i]');
-  const canonical = canonicalEl?.getAttribute('href') || canonicalEl?.getAttribute('data-inert-href') || '';
-  add('Canonical hint', /^https?:\/\//.test(canonical), canonical || 'No absolute canonical found. This may be intentional.', 'If appropriate, specify this page’s preferred absolute URL.');
+  const canonicalEl = doc.querySelector('link[rel~="canonical" i]');
+  const canonical = (canonicalEl?.getAttribute('href') || canonicalEl?.getAttribute('data-inert-href') || '').trim();
+  let absoluteCanonical = false;
+  if (/^https?:\/\//i.test(canonical)) {
+    try {
+      const parsed = new URL(canonical);
+      absoluteCanonical = ['http:','https:'].includes(parsed.protocol) && !!parsed.hostname;
+    } catch { /* A protocol prefix alone does not establish a parseable URL. */ }
+  }
+  add('Canonical hint', absoluteCanonical, canonical || 'No absolute HTTP(S) canonical found. This may be intentional.', 'If appropriate, specify this page’s preferred absolute HTTP(S) URL. This checks URL syntax, not the destination.');
   const social = doc.querySelector('meta[property="og:title" i]')?.getAttribute('content')?.trim();
   add('Social preview title', !!social, social ? `Open Graph title: ${social}` : 'No Open Graph title found.', 'Add accurate sharing metadata when relevant.');
   return findings;
