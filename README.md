@@ -8,6 +8,12 @@ Ten HTML source heuristics, run locally in your browser. Paste a page's HTML and
 
 The hosted site supports limited anonymous usage counts ([privacy details](https://launch.7eventeen.dev/privacy#usage)). You can also [open it with usage counts off](https://launch.7eventeen.dev/?measure=off#preflight).
 
+## See a source finding
+
+![The hosted free checker flags an email field without an associated label: 9 of 10 source checks passed.](docs/free-checker-example.jpg)
+
+This fictional Studio North example shows the hosted free checker, with the input line visible beside its **Form labels** finding. The offline demo has a different layout and uses the same ten source heuristics. Choose **Show the fix** in the hosted example to compare the associated label. These are source observations, not a customer result or a rendered-page assessment.
+
 ## Try it offline
 
 [Download the offline demo ZIP](https://github.com/7eventeendev/launchcheck-preflight/releases/download/v0.1.2/launchcheck-preflight-v0.1.2.zip), extract it, and open **demo.html** in your browser. The small package contains the free demo, a quickstart and the MIT license. No server or installation is needed; the demo does not save source or results.
