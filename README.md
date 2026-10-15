@@ -10,7 +10,9 @@ The hosted site supports limited anonymous usage counts ([privacy details](https
 
 ## Try it offline
 
-Download this repository as a ZIP from **Code → Download ZIP**, extract it, and open **[demo.html](demo.html)** in your browser. The file contains its own styles and script; no server or installation is needed. It does not save source or results.
+[Download the offline demo ZIP](https://github.com/7eventeendev/launchcheck-preflight/releases/download/v0.1.0/launchcheck-preflight-v0.1.0.zip), extract it, and open **demo.html** in your browser. The small package contains the free demo, a quickstart and the MIT license. No server or installation is needed; the demo does not save source or results.
+
+For the source modules and development files, use **Code → Download ZIP** to download the full repository. The same self-contained **[demo.html](demo.html)** is included there.
 
 Choose **Try fictional example** to inspect a Studio North email-signup page: 9 of 10 source checks pass, and the email input has no detectable label. **Show labeled version** adds a visible associated label and passes 10 of 10. These are fictional examples, not customer results. Editing the source clears stale observations until you check again.
 
